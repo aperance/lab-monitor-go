@@ -13,8 +13,8 @@ import (
 
 type clientUpdate struct {
 	ID          string                 `json:"id"`
-	StateDiff   map[string]interface{} `json:"stateDiff"`
-	HistoryDiff []interface{}          `json:"historyDiff"`
+	StateDiff   map[string]interface{} `json:"state"`
+	HistoryDiff []interface{}          `json:"history"`
 }
 
 type device struct {
@@ -37,27 +37,27 @@ func (d *device) watch() {
 
 			switch {
 			case ok:
-				if d.status != "connected" {
+				if d.status != "CONNECTED" {
 					log.Println(d.ipAddress + ": Connection established.")
 				}
 				d.currentState = state
-				d.status = "connected"
+				d.status = "CONNECTED"
 				d.lastCommunication = time.Now().Unix()
 				sequenceNumber = state[config.SequenceKey]
 				sleepDuration = 0
-			case d.status == "connected":
+			case d.status == "CONNECTED":
 				log.Println(d.ipAddress + ": Connection lost. Retrying...")
-				d.status = "retry"
+				d.status = "RETRY"
 				sequenceNumber = "0"
 				sleepDuration = 0
-			case d.status == "inactive" || time.Now().Unix()-d.lastCommunication > 600000:
+			case d.status == "INACTIVE" || time.Now().Unix()-d.lastCommunication > 600000:
 				log.Println(d.ipAddress + ": Device inactive. Retrying in 5 min.")
-				d.status = "inactive"
+				d.status = "INACTIVE"
 				sequenceNumber = "0"
 				sleepDuration = 5 * time.Minute
 			default:
 				log.Println(d.ipAddress + ": Device disconnected. Retrying in 1 min.")
-				d.status = "disconnected"
+				d.status = "DISCONNECTED"
 				sequenceNumber = "0"
 				sleepDuration = 1 * time.Minute
 			}
@@ -108,7 +108,7 @@ func (d *device) fetchState(seq string) (map[string]string, bool) {
 		return nil, false
 	}
 
-	state["lastCommunication"] = fmt.Sprint(time.Now().Unix())
+	state["timestamp"] = fmt.Sprint(time.Now().Format("Mon Jan 2 3:04:05 PM"))
 
 	return state, true
 }
@@ -116,7 +116,7 @@ func (d *device) fetchState(seq string) (map[string]string, bool) {
 func (d *device) getStateDiff() map[string]interface{} {
 	diff := make(map[string]interface{})
 
-	if d.status == "connected" {
+	if d.status == "CONNECTED" {
 		for key, p := range d.previousState {
 			c, ok := d.currentState[key]
 			if ok == false {
