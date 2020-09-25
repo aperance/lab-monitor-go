@@ -8,7 +8,7 @@ import (
 
 type accumulatedRecords struct {
 	State   map[string]map[string]string        `json:"state"`
-	History map[string]map[string][]interface{} `json:"histroy"`
+	History map[string]map[string][]interface{} `json:"history"`
 }
 
 var devicePool map[string]*device
@@ -55,5 +55,5 @@ func main() {
 	http.HandleFunc("/data", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(p, w, r)
 	})
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":4000", nil)
 }
